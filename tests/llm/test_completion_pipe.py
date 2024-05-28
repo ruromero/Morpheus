@@ -30,6 +30,7 @@ from morpheus.llm.nodes.llm_generate_node import LLMGenerateNode
 from morpheus.llm.nodes.prompt_template_node import PromptTemplateNode
 from morpheus.llm.services.llm_service import LLMService
 from morpheus.llm.services.nemo_llm_service import NeMoLLMService
+from morpheus.llm.services.ollama_llm_service import OllamaLLMService
 from morpheus.llm.services.openai_chat_service import OpenAIChatService
 from morpheus.llm.task_handlers.simple_task_handler import SimpleTaskHandler
 from morpheus.messages import ControlMessage
@@ -141,6 +142,18 @@ def test_completion_pipe_integration_openai(config: Config, countries: list[str]
                             countries=countries,
                             capital_responses=capital_responses,
                             model_name="gpt-3.5-turbo")
+    assert results['diff_cols'] == 0
+    assert results['total_rows'] == len(countries)
+    assert results['matching_rows'] + results['diff_rows'] == len(countries)
+
+
+@pytest.mark.usefixtures("ollama")
+def test_completion_pipe_integration_openai(config: Config, countries: list[str], capital_responses: list[str]):
+    results = _run_pipeline(config,
+                            OllamaLLMService,
+                            countries=countries,
+                            capital_responses=capital_responses,
+                            model_name="llama3")
     assert results['diff_cols'] == 0
     assert results['total_rows'] == len(countries)
     assert results['matching_rows'] + results['diff_rows'] == len(countries)

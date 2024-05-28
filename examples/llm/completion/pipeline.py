@@ -26,6 +26,7 @@ from morpheus.llm.nodes.llm_generate_node import LLMGenerateNode
 from morpheus.llm.nodes.prompt_template_node import PromptTemplateNode
 from morpheus.llm.services.llm_service import LLMService
 from morpheus.llm.services.nemo_llm_service import NeMoLLMService
+from morpheus.llm.services.ollama_llm_service import OllamaLLMService
 from morpheus.llm.services.openai_chat_service import OpenAIChatService
 from morpheus.llm.task_handlers.simple_task_handler import SimpleTaskHandler
 from morpheus.messages import ControlMessage
@@ -51,11 +52,14 @@ def _build_engine(llm_service: str):
     elif llm_service == "OpenAI":
         llm_service_cls = OpenAIChatService
         model_name = 'gpt-3.5-turbo'
+    elif llm_service == "Ollama":
+        llm_service_cls = OllamaLLMService
+        model_name = 'llama3'
     else:
         raise ValueError(f"Invalid LLM service: {llm_service}")
 
     service = llm_service_cls()
-    llm_clinet = service.get_client(model_name=model_name)
+    llm_client = service.get_client(model_name=model_name)
 
     engine = LLMEngine()
 
@@ -65,7 +69,7 @@ def _build_engine(llm_service: str):
                     inputs=["/extracter"],
                     node=PromptTemplateNode(template="What is the capital of {{country}}?", template_format="jinja"))
 
-    engine.add_node("completion", inputs=["/prompts"], node=LLMGenerateNode(llm_client=llm_clinet))
+    engine.add_node("completion", inputs=["/prompts"], node=LLMGenerateNode(llm_client=llm_client))
 
     engine.add_task_handler(inputs=["/completion"], handler=SimpleTaskHandler())
 

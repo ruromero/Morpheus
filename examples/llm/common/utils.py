@@ -19,6 +19,7 @@ from langchain.embeddings import HuggingFaceEmbeddings  # pylint: disable=no-nam
 
 from morpheus.llm.services.llm_service import LLMService
 from morpheus.llm.services.nemo_llm_service import NeMoLLMService
+from morpheus.llm.services.ollama_llm_service import OllamaLLMService
 from morpheus.llm.services.openai_chat_service import OpenAIChatService
 from morpheus.service.vdb.milvus_client import DATA_TYPE_MAP
 from morpheus.service.vdb.milvus_vector_db_service import MilvusVectorDBService
@@ -44,6 +45,8 @@ def build_llm_service(model_name: str, llm_service: str, tokens_to_generate: int
     elif (lowered_llm_service == 'openai'):
         model_kwargs['max_tokens'] = tokens_to_generate
         service = OpenAIChatService()
+    elif (lowered_llm_service == 'ollama'):
+        service = OllamaLLMService()
     else:
         raise RuntimeError(f"Unsupported LLM service name: {llm_service}")
 

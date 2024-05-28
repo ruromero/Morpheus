@@ -28,6 +28,7 @@ from morpheus.llm.nodes.llm_generate_node import LLMGenerateNode
 from morpheus.llm.nodes.prompt_template_node import PromptTemplateNode
 from morpheus.llm.services.llm_service import LLMService
 from morpheus.llm.services.nemo_llm_service import NeMoLLMService
+from morpheus.llm.services.ollama_llm_service import OllamaLLMService
 from morpheus.llm.services.openai_chat_service import OpenAIChatService
 from morpheus.llm.task_handlers.simple_task_handler import SimpleTaskHandler
 from morpheus.messages import ControlMessage
@@ -79,7 +80,7 @@ def _run_pipeline(config: Config,
 @pytest.mark.use_python
 @pytest.mark.benchmark
 @pytest.mark.usefixtures("mock_nemollm", "mock_chat_completion")
-@pytest.mark.parametrize("llm_service_cls", [NeMoLLMService, OpenAIChatService])
+@pytest.mark.parametrize("llm_service_cls", [NeMoLLMService, OpenAIChatService, OllamaLLMService])
 def test_completion_pipe(benchmark: collections.abc.Callable[[collections.abc.Callable], typing.Any],
                          config: Config,
                          dataset: DatasetManager,

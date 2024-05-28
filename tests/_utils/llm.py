@@ -99,6 +99,22 @@ def mk_mock_openai_response(messages: list[str]) -> mock.MagicMock:
 
     return response
 
+def mk_mock_ollama_response(messages: list[str]) -> mock.MagicMock:
+    """
+    Creates a mocked ollama._types.GenerateResponse response with the given messages.
+    """
+    response = mock.MagicMock()
+
+    response.choices = [_mk_mock_choice(message) for message in messages]
+    response.dict.return_value = {
+        "choices": [{
+            'message': {
+                'response': message
+            }
+
+        } for message in messages]
+    }
+    return response
 
 def mk_mock_langchain_tool(responses: list[str]) -> mock.MagicMock:
     """

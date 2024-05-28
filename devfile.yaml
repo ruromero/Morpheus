@@ -1,0 +1,75 @@
+commands:
+# - exec:
+#     commandLine: pip install -r requirements.txt
+#     component: py-web
+#     group:
+#       isDefault: true
+#       kind: build
+#     workingDir: ${PROJECT_SOURCE}
+#   id: pip-install-requirements
+- exec:
+    # commandLine: conda init &&\
+    #              conda env remove -y --name morpheus && \
+    #              conda env create --solver=libmamba -n morpheus --file /workspace/conda/environments/dev_cuda-121_arch-x86_64.yaml &&\
+    #              conda activate morpheus && \
+    #              conda install pymilvus -y && \
+    #              python /workspace/examples/llm/main.py completion pipeline --llm_service NeMo
+    commandLine: mamba env update -n morpheus  --file ./conda/environments/examples_cuda-121_arch-x86_64.yaml && \
+                 python /workspace/examples/llm/main.py completion pipeline --llm_service NemoLLM
+
+    component: py-web
+    group:
+      isDefault: true
+      kind: run
+    workingDir: ${PROJECT_SOURCE}
+  id: run-app
+
+components:
+- container:
+    # args:
+    #   # - conda 
+    #   # - env
+    #   # - update
+    #   # - --solver=libmamba
+    #   # - -n 
+    #   # - morpheus
+    #   # - --file 
+    #   # - conda/environments/dev_cuda-121_arch-x86_64.yaml
+    #   # - --prune
+      
+      # -  /workspace/docker/entrypoint.sh
+      # -  python
+      # -  /workspace/examples/llm/main.py
+      # - completion
+      # - pipeline
+      # - --llm_service
+      # - OpenAI
+    env:
+    - name: DEBUG_PORT
+      value: "5858"
+    image: nvcr.io/nvidia/morpheus/morpheus:24.03-runtime
+    mountSources: true
+
+  name: py-web
+  attributes:
+    pod-overrides:
+        spec:
+          serviceAccountName: privileged-sa
+    container-overrides:
+      securityContext:
+         privileged: true
+
+metadata:
+  description: Dj
+  displayName: morpheus-example
+  icon: https://static.djangoproject.com/img/logos/django-logo-positive.svg
+  language: Python
+  name: morpheus-example
+  
+  provider: Red Hat
+  tags:
+  - morpheus
+  - Python
+  - Pip
+  version: 2.1.0
+schemaVersion: 2.1.0

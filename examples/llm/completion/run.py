@@ -53,7 +53,7 @@ def run():
 )
 @click.option("--llm_service",
               default="NemoLLM",
-              type=click.Choice(['NemoLLM', 'OpenAI'], case_sensitive=False),
+              type=click.Choice(['NemoLLM', 'OpenAI', 'Ollama'], case_sensitive=False),
               help="LLM service to issue requests to.")
 @click.option(
     "--input_file",

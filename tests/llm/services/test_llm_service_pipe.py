@@ -18,6 +18,7 @@ from unittest import mock
 import cudf
 
 from _utils import assert_results
+from _utils.llm import mk_mock_ollama_response
 from _utils.llm import mk_mock_openai_response
 from morpheus.config import Config
 from morpheus.llm import LLMEngine
@@ -25,6 +26,7 @@ from morpheus.llm.nodes.extracter_node import ExtracterNode
 from morpheus.llm.nodes.llm_generate_node import LLMGenerateNode
 from morpheus.llm.services.llm_service import LLMService
 from morpheus.llm.services.nemo_llm_service import NeMoLLMService
+from morpheus.llm.services.ollama_llm_service import OllamaLLMService
 from morpheus.llm.services.openai_chat_service import OpenAIChatService
 from morpheus.llm.task_handlers.simple_task_handler import SimpleTaskHandler
 from morpheus.messages import ControlMessage
@@ -95,3 +97,18 @@ def test_completion_pipe_openai(config: Config,
 
     mock_client.chat.completions.create.assert_not_called()
     mock_async_client.chat.completions.create.assert_called()
+
+
+def test_completion_pipe_ollama(config: Config,
+                                mock_ollama: tuple[mock.MagicMock, mock.MagicMock],
+                                country_prompts: list[str],
+                                capital_responses: list[str]):
+    (mock_client, mock_async_client) = mock_ollama
+    mock_async_client.generate = [
+        mk_mock_ollama_response([response]) for response in capital_responses
+    ]
+
+    _run_pipeline(config, OllamaLLMService, country_prompts, capital_responses)
+
+    mock_client.generate.assert_not_called()
+    mock_async_client.generate.assert_called()

@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: milvus-standalone
+  labels:
+    app: milvus
+    component: milvus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: milvus
+      component: milvus
+  template:
+    metadata:
+      labels:
+        app: milvus
+        component: milvus
+    spec:
+      containers:
+        - name: milvus
+          image: milvusdb/milvus:v2.4.1
+          command: 
+            - "milvus"
+            - "run" 
+            - "standalone"
+          ports:
+            - name: grpc
+              protocol: TCP
+              containerPort: 19530
+            - name: api
+              protocol: TCP
+              containerPort: 9091
+          env:
+            - name: MINIO_ADDRESS
+              value: milvus-minio:9000
+            - name: ETCD_ENDPOINTS
+              value: milvus-etcd:2379
+            - name: MINIO_ACCESS_KEY_ID
+              value: admin
+            - name: MINIO_SECRET_ACCESS_KEY
+              value: admin123!
+          # resources:
+          #   limits:
+          #     memory: "300Mi"
+          #     cpu: "50m"
+          #   requests:
+          #     memory: "100Mi"
+          #     cpu: "10m"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9091
+            initialDelaySeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9091
+            initialDelaySeconds: 2
+          volumeMounts:
+            - name: milvus-data
+              mountPath: /var/lib/milvus
+      volumes:
+        - name: milvus-data
+          persistentVolumeClaim:
+            claimName: milvus-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: milvus-standalone
+  labels:
+    app: milvus
+    component: milvus
+spec:
+  ports:
+  - name: grpc
+    port: 19530
+    protocol: TCP
+    targetPort: 19530
+  - name: api
+    port: 9091
+    protocol: TCP
+    targetPort: 9091
+  selector:
+    app: milvus
+    component: milvus
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: milvus-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

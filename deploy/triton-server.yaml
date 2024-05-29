@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: triton-server
+  labels:
+    app: triton-server
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: triton-server
+  template:
+    metadata:
+      labels:
+        app: triton-server
+    spec:
+      containers:
+        - name: triton
+          image: nvcr.io/nvidia/tritonserver:23.06-py3
+          command: 
+            - "tritonserver"
+            - "--model-repository=/repo/Morpheus/models/triton-model-repo"
+            - "--exit-on-error=false"
+            - "--strict-readiness=false"
+            - "--disable-auto-complete-config"
+            - "--log-info=true"
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 8000
+            - name: grpc
+              protocol: TCP
+              containerPort: 8001
+            - name: metrics
+              protocol: TCP
+              containerPort: 8002
+          # resources:
+          #   limits:
+          #     memory: "300Mi"
+          #     cpu: "50m"
+          #   requests:
+          #     memory: "100Mi"
+          #     cpu: "10m"
+          readinessProbe:
+            httpGet:
+              path: /v2/health/ready
+              port: 8000
+            initialDelaySeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /v2/health/ready
+              port: 8000
+            initialDelaySeconds: 2
+          volumeMounts:
+            - name: morpheus-repo
+              mountPath: /repo
+      volumes:
+        - name: morpheus-repo
+          persistentVolumeClaim:
+            claimName: morpheus-repo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: triton-server
+  labels:
+    app: triton-server
+spec:
+  ports:
+  - name: grpc
+    port: 8001
+    protocol: TCP
+    targetPort: 8001
+  - name: http
+    port: 8000
+    protocol: TCP
+    targetPort: 8000
+  - name: metrics
+    port: 8002
+    protocol: TCP
+    targetPort: 8002
+  selector:
+    app: triton-server
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: morpheus-repo
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi

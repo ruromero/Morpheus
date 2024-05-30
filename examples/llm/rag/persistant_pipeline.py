@@ -110,7 +110,7 @@ Please answer the following question: \n{{ query }}"""
     return engine
 
 
-def pipeline(num_threads, pipeline_batch_size, model_max_batch_size, embedding_size, model_name, llm_service: str):
+def pipeline(num_threads, pipeline_batch_size, model_max_batch_size, embedding_size, model_name, llm_service, vector_db_uri: str):
     config = Config()
     config.mode = PipelineModes.OTHER
 
@@ -121,7 +121,7 @@ def pipeline(num_threads, pipeline_batch_size, model_max_batch_size, embedding_s
     config.mode = PipelineModes.NLP
     config.edge_buffer_size = 128
 
-    vdb_service = build_milvus_service(embedding_size=embedding_size)
+    vdb_service = build_milvus_service(embedding_size=embedding_size, uri=vector_db_uri)
 
     upload_task = {"task_type": "upload", "task_dict": {"input_keys": ["questions"], }}
     retrieve_task = {"task_type": "retrieve", "task_dict": {"input_keys": ["questions", "embedding"], }}

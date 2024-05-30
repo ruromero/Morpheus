@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: milvus-attu
+  labels:
+    app: milvus
+    component: attu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: milvus
+      component: attu
+  template:
+    metadata:
+      labels:
+        app: milvus
+        component: attu
+    spec:
+      containers:
+        - name: attu
+          image: zilliz/attu:v2.4.0
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 3000
+          env:
+            - name: MILVUS_URL
+              value: milvus-standalone:19530
+          # resources:
+          #   limits:
+          #     memory: "300Mi"
+          #     cpu: "50m"
+          #   requests:
+          #     memory: "100Mi"
+          #     cpu: "10m"
+          volumeMounts:
+            - name: cache
+              mountPath: /.cache
+      volumes:
+        - name: cache
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: milvus-attu
+  labels:
+    app: milvus
+    component: attu
+spec:
+  ports:
+  - name: http
+    port: 3000
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app: milvus
+    component: attu
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: milvus-attu
+spec:
+  port:
+    targetPort: 3000 
+  to:
+    kind: Service
+    name: milvus-attu

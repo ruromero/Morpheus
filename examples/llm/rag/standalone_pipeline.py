@@ -38,7 +38,7 @@ from ..common.utils import build_milvus_service
 logger = logging.getLogger(__name__)
 
 
-def _build_engine(model_name: str, vdb_resource_name: str, llm_service: str, embedding_size: int):
+def _build_engine(model_name: str, vdb_resource_name: str, llm_service: str, vector_db_uri: str, embedding_size: int):
 
     engine = LLMEngine()
 
@@ -65,7 +65,7 @@ Data: {{ c.data }}
 
 Please answer the following question: \n{{ query }}"""
 
-    vector_service = build_milvus_service(embedding_size)
+    vector_service = build_milvus_service(embedding_size, uri=vector_db_uri)
     embeddings = build_huggingface_embeddings("sentence-transformers/all-MiniLM-L6-v2",
                                               model_kwargs={'device': 'cuda'},
                                               encode_kwargs={'batch_size': 100})
@@ -94,7 +94,8 @@ def standalone(num_threads,
                model_name,
                vdb_resource_name,
                repeat_count,
-               llm_service: str,
+               llm_service,
+               vector_db_uri: str,
                embedding_size: int,
                question: list[str]):
     config = Config()
@@ -124,6 +125,7 @@ def standalone(num_threads,
                        engine=_build_engine(model_name=model_name,
                                             vdb_resource_name=vdb_resource_name,
                                             llm_service=llm_service,
+                                            vector_db_uri=vector_db_uri,
                                             embedding_size=embedding_size)))
 
     sink = pipe.add_stage(InMemorySinkStage(config))

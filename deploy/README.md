@@ -92,3 +92,19 @@ In the logs you should see that the models are loaded. In my case there were 2 m
 | sid-minibert-trt       | 1       | UNAVAILABLE: Internal: unable to load plan file to auto complete config: /repo/Morpheus/models/triton-model-repo/sid-minibert-trt/1/model.plan  |
 +------------------------+---------+-------------------------------------------------------------------------------------------------------------------------------------------------+
 ```
+
+## Custom VDB Upload
+
+```bash
+python examples/llm/main.py vdb_upload pipeline --enable_cache --enable_monitors --embedding_model_name all-MiniLM-L6-v2 --triton_server_url=triton-server:8001 --vector_db_uri=http://milvus-standalone:19530 --feed_inputs https://access.redhat.com/security/data/meta/v1/rhsa.rss --feed_inputs https://developers.redhat.com/blog/feed --feed_inputs https://www.redhat.com/en/rss/blog
+```
+
+Using a configuration file
+
+```bash
+python examples/llm/main.py vdb_upload pipeline --vdb_config_path vdb_rh_config.yaml
+```
+
+```bash
+python examples/llm/main.py --log_level=DEBUG rag pipeline --llm_service=OpenAI --vector_db_uri=http://milvus-standalone:19530 --model_name=gpt-3.5-turbo
+```

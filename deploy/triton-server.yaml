@@ -47,12 +47,12 @@ spec:
             httpGet:
               path: /v2/health/ready
               port: 8000
-            initialDelaySeconds: 2
+            initialDelaySeconds: 30
           livenessProbe:
             httpGet:
               path: /v2/health/ready
               port: 8000
-            initialDelaySeconds: 2
+            initialDelaySeconds: 30
           volumeMounts:
             - name: morpheus-repo
               mountPath: /repo

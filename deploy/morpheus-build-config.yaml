@@ -1,0 +1,31 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: morpheus-build
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'morpheus:latest'
+  strategy:
+    type: Docker
+    dockerStrategy:
+      from:
+        kind: DockerImage
+        name: 'nvcr.io/nvidia/morpheus/morpheus:v24.03.02-runtime'
+  postCommit: {}
+  source:
+    type: Dockerfile
+    dockerfile: |-
+      FROM nvcr.io/nvidia/morpheus/morpheus:v24.03.02-runtime
+
+      USER root
+
+      RUN mamba env update \
+        -n morpheus \
+        --file ./conda/environments/all_cuda-121_arch-x86_64.yaml
+
+      RUN pip install debugpy || true
+
+      ENTRYPOINT ["sleep", "infinity"]
+  runPolicy: Serial

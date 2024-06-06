@@ -9,19 +9,34 @@ oc create sa morpheus-sa
 oc adm policy add-scc-to-user anyuid -z morpheus-sa
 ```
 
-Deploy morpheus
+## Build Morpheus
+
+You can create a Build that prepares the `conda` environment and 
+creates an imageStreamTag `morpheus:latest` in your namespace.
+
+This step takes time but saves you a lot of time later on.
 
 ```bash
-oc apply -f deploy/morpheus.yaml
+oc apply -f deploy/morpheus-build-config.yaml
+oc start-build --from-build=morpheus-build
 ```
 
-Access the pod
+## Deploy morpheus
+
+There is a template that creates a deployment for Morpheus. It defaults to `nvcr.io/nvidia/morpheus/morpheus:v24.03.02-runtime`
+But if you used the BuildConfig you can override the `CONTAINER_IMAGE` parameter with the imageStreamTag.
+
+```bash
+oc process -f deploy/morpheus-template.yaml -p CONTAINER_IMAGE=image-registry.openshift-image-registry.svc:5000/`oc project -q`/morpheus:latest
+```
+
+## Access the pod
 
 ```bash
 oc exec -it `oc get po -l app=morpheus -o=name` -- bash
 ```
 
-Update the conda environment
+Update the conda environment. **Skip if you are using the image from the Build.**
 
 ```bash
 mamba env update \
@@ -77,6 +92,7 @@ oc delete pod -l app=triton-server
 ```
 
 In the logs you should see that the models are loaded. In my case there were 2 models not loaded.
+The reason of these models not loading is [here](https://github.com/nv-morpheus/Morpheus/tree/branch-24.03/models/triton-model-repo/phishing-bert-trt/1#generating-trt-models-from-onnx)
 
 ```
 +------------------------+---------+-------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -96,13 +112,13 @@ In the logs you should see that the models are loaded. In my case there were 2 m
 ## Custom VDB Upload
 
 ```bash
-python examples/llm/main.py vdb_upload pipeline --enable_cache --enable_monitors --embedding_model_name all-MiniLM-L6-v2 --triton_server_url=triton-server:8001 --vector_db_uri=http://milvus-standalone:19530 --feed_inputs https://access.redhat.com/security/data/meta/v1/rhsa.rss --feed_inputs https://developers.redhat.com/blog/feed --feed_inputs https://www.redhat.com/en/rss/blog
+python examples/llm/main.py --log_level=DEBUG vdb_upload pipeline --enable_cache --enable_monitors --embedding_model_name all-MiniLM-L6-v2 --triton_server_url=triton-server:8001 --vector_db_uri=http://milvus-standalone:19530 --feed_inputs https://access.redhat.com/security/data/meta/v1/rhsa.rss --feed_inputs https://developers.redhat.com/blog/feed --feed_inputs https://www.redhat.com/en/rss/blog
 ```
 
 Using a configuration file
 
 ```bash
-python examples/llm/main.py vdb_upload pipeline --vdb_config_path vdb_rh_config.yaml
+python examples/llm/main.py vdb_upload pipeline --vdb_config_path examples/llm/vdb_upload/vdb_rh_config.yaml
 ```
 
 ```bash

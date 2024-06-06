@@ -4,7 +4,8 @@ USER root
 
 RUN mamba env update \
   -n morpheus \
-  --file ./conda/environments/all_cuda-121_arch-x86_64.yaml && \
-  pip install debugpy
+  --file ./conda/environments/all_cuda-121_arch-x86_64.yaml
+
+RUN pip install debugpy || true
 
 ENTRYPOINT ["sleep", "infinity"]

@@ -1,0 +1,32 @@
+schemaVersion: 2.2.0
+metadata:
+  name: morpheus
+  version: 1.0.0
+variables:
+  MORPHEUS_IMAGE: image-registry.openshift-image-registry.svc:5000/ruben-nvidia/morpheus:latest
+components:
+- name: morpheus
+  attributes:
+    pod-overrides:
+      spec:
+        serviceAccountName: morpheus-sa
+  container:
+    image: "{{MORPHEUS_IMAGE}}"
+    mountSources: true
+    endpoints:
+      - exposure: public
+        name: debug-port
+        protocol: http
+        targetPort: 5678
+
+commands:
+  - id: run-app
+    exec:
+      commandLine: "bash -c while true; do sleep 1000; done"
+      workingDir: ${PROJECTS_ROOT}
+      component: morpheus
+      group:
+        kind: run
+        isDefault: true
+
+  

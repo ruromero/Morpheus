@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: morpheus
-          image: image-registry.openshift-image-registry.svc:5000/demo/morpheus:latest
+          image: nvcr.io/nvidia/morpheus/morpheus:v24.03.02-runtime
           command: 
             - "/bin/bash"
             - "-c"

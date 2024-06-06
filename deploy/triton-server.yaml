@@ -53,6 +53,7 @@ spec:
               path: /v2/health/ready
               port: 8000
             initialDelaySeconds: 30
+            periodSeconds: 5
           volumeMounts:
             - name: morpheus-repo
               mountPath: /repo

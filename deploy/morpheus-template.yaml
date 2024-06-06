@@ -1,0 +1,40 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: morpheus-template
+  annotations:
+    description: "Deploy Morpheus"
+objects:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: morpheus
+    labels:
+      app: morpheus
+  spec:
+    strategy:
+      type: Recreate
+    replicas: 1
+    selector:
+      matchLabels:
+        app: morpheus
+    template:
+      metadata:
+        labels:
+          app: morpheus
+      spec:
+        containers:
+          - name: morpheus
+            image: ${CONTAINER_IMAGE}
+            command: 
+              - "/bin/bash"
+              - "-c"
+              - "--"
+            args: [ "while true; do sleep 30; done;" ]
+            securityContext:
+            runAsUser: 0
+        serviceAccountName: morpheus-sa
+parameters:
+- description: Container image
+  name: CONTAINER_IMAGE
+  value: nvcr.io/nvidia/morpheus/morpheus:v24.03.02-runtime

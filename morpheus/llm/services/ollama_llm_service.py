@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import logging
 import os
+import typing
 
 import ollama
 
@@ -65,6 +67,7 @@ class OllamaLLMClient(LLMClient):
 
         host = os.environ.get("OLLAMA_HOST", 'http://localhost:11434')
 
+        logger.info("Configured Ollama host: %s", host)
         self._client = Client(host=host)
         self._async_client = AsyncClient(host=host, )
 
@@ -82,6 +85,76 @@ class OllamaLLMClient(LLMClient):
         """
         output = self._client.generate(model=self._model_name, prompt=input_dict[self._prompt_key])
         return self._extract_completion(output)
+    
+    @typing.overload
+    def generate_batch(self,
+                       inputs: dict[str, list],
+                       return_exceptions: typing.Literal[True] = True) -> list[str | BaseException]:
+        ...
+
+    @typing.overload
+    def generate_batch(self, inputs: dict[str, list], return_exceptions: typing.Literal[False] = False) -> list[str]:
+        ...
+
+    def generate_batch(self, inputs: dict[str, list], return_exceptions=False) -> list[str] | list[str | BaseException]:
+        """
+        Issue a request to generate a list of responses based on a list of prompts.
+
+        Parameters
+        ----------
+        inputs : dict
+            Inputs containing prompt data.
+        return_exceptions : bool
+            Whether to return exceptions in the output list or raise them immediately.
+        """
+        prompts = inputs[self._prompt_key]
+        assistants = None
+        if (self._set_assistant):
+            assistants = inputs[self._assistant_key]
+            if len(prompts) != len(assistants):
+                raise ValueError("The number of prompts and assistants must be equal.")
+
+        results = []
+        for (i, prompt) in enumerate(prompts):
+            assistant = assistants[i] if assistants is not None else None
+            if (return_exceptions):
+                results.append(self.generate(prompt, assistant, return_exceptions=True))
+            else:
+                results.append(self.generate(prompt, assistant, return_exceptions=False))
+
+        return results
+      
+    @typing.overload
+    async def generate_batch_async(self,
+                                   inputs: dict[str, list],
+                                   return_exceptions: typing.Literal[True] = True) -> list[str | BaseException]:
+        ...
+
+    @typing.overload
+    async def generate_batch_async(self,
+                                   inputs: dict[str, list],
+                                   return_exceptions: typing.Literal[False] = False) -> list[str]:
+        ...
+
+    async def generate_batch_async(self,
+                                   inputs: dict[str, list],
+                                   return_exceptions=False) -> list[str] | list[str | BaseException]:
+        """
+        Issue an asynchronous request to generate a list of responses based on a list of prompts.
+
+        Parameters
+        ----------
+        inputs : dict
+            Inputs containing prompt data.
+        return_exceptions : bool
+            Whether to return exceptions in the output list or raise them immediately.
+        """
+        prompts = inputs[self._prompt_key]
+ 
+        coros = []
+        for (i, prompt) in enumerate(prompts):
+            coros.append(self._generate_async(prompt))
+        return await asyncio.gather(*coros, return_exceptions=return_exceptions)
 
     async def generate_async(self, **input_dict) -> str:
         """
@@ -92,7 +165,18 @@ class OllamaLLMClient(LLMClient):
         input_dict : dict
             Input containing prompt data.
         """
-        output = await self._async_client.generate(model=self._model_name, prompt=input_dict[self._prompt_key])
+        return self._generate_async(input_dict[self._prompt_key])
+
+    async def _generate_async(self, prompt: str) -> str:
+        """
+        Issue an asynchronous request to generate a response based on a given prompt.
+
+        Parameters
+        ----------
+        input_dict : dict
+            Input containing prompt data.
+        """
+        output = await self._async_client.generate(model=self._model_name, prompt=prompt)
         return self._extract_completion(output)
 
     def _extract_completion(self, output: ollama._types.GenerateResponse) -> str:

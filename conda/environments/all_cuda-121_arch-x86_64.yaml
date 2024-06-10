@@ -69,6 +69,7 @@ dependencies:
 - numexpr
 - numpydoc=1.5
 - nvtabular=23.08.00
+- ollama=0.2.1
 - onnx
 - openai=1.13
 - papermill=2.4.0

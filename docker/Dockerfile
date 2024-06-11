@@ -215,7 +215,7 @@ RUN --mount=type=cache,id=workspace_cache,target=/workspace/.cache,sharing=locke
     # Need to get around recent versions of git locking paths until they are deemed safe
     git config --global --add safe.directory "*" &&\
     # Change to the morpheus directory and build the conda package
-    cd ${MORPHEUS_ROOT_HOST} &&\
+    cd ${MORPHEUS_ROOT} &&\
     MORPHEUS_PYTHON_BUILD_STUBS=OFF CONDA_BLD_PATH=/opt/conda/conda-bld ./ci/conda/recipes/run_conda_build.sh morpheus
 
 # ============ Stage: runtime ============

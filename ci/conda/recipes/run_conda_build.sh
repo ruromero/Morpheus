@@ -23,7 +23,7 @@ function hasArg {
 }
 
 function get_version() {
-   echo "$(git describe --tags | grep -o -E '^([^-]*?)')"
+   echo "$(git describe --tags --always | grep -o -E '^([^-]*?)')"
 }
 
 # Color variables

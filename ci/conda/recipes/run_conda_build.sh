@@ -99,11 +99,13 @@ CONDA_ARGS_ARRAY+=("-c" "${CONDA_CHANNEL_ALIAS:+"${CONDA_CHANNEL_ALIAS%/}/"}nvid
 CONDA_ARGS_ARRAY+=("-c" "${CONDA_CHANNEL_ALIAS:+"${CONDA_CHANNEL_ALIAS%/}/"}pytorch")
 CONDA_ARGS_ARRAY+=("-c" "${CONDA_CHANNEL_ALIAS:+"${CONDA_CHANNEL_ALIAS%/}/"}defaults")
 
+GIT_CLONE_PROTECTION_ACTIVE=false
+
 if hasArg morpheus; then
    # Set GIT_VERSION to set the project version inside of meta.yaml
    export GIT_VERSION="$(get_version)"
 
-   echo "Running conda-build for morpheus v${GIT_VERSION}..."
+   echo "Running conda-build for morpheus ${GIT_VERSION}..."
    set -x
    conda ${CONDA_COMMAND} "${CONDA_ARGS_ARRAY[@]}" ${CONDA_ARGS} ci/conda/recipes/morpheus
    set +x

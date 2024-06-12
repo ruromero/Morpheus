@@ -27,8 +27,7 @@ spec:
             - "--disable-auto-complete-config"
             - "--log-info=true"
             - "--model-control-mode=explicit"
-            - "--load-model"
-            - "all-MiniLM-L6-v2"
+            - "--load-model=all-MiniLM-L6-v2"
           ports:
             - name: http
               protocol: TCP
@@ -50,12 +49,13 @@ spec:
             httpGet:
               path: /v2/health/ready
               port: 8000
-            initialDelaySeconds: 2
+            initialDelaySeconds: 30
           livenessProbe:
             httpGet:
               path: /v2/health/ready
               port: 8000
-            initialDelaySeconds: 2
+            initialDelaySeconds: 30
+            periodSeconds: 5
           volumeMounts:
             - name: morpheus-repo
               mountPath: /repo

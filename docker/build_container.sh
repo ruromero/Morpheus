@@ -38,7 +38,7 @@ MORPHEUS_SUPPORT_DOCA=${MORPHEUS_SUPPORT_DOCA:-"OFF"}
 PYTHON_VER=${PYTHON_VER:-3.10}
 
 # Determine the relative path from $PWD to $MORPHEUS_ROOT
-MORPHEUS_ROOT_HOST=${MORPHEUS_ROOT_HOST:-"$(realpath --relative-to=${PWD} ${MORPHEUS_ROOT})"}
+MORPHEUS_ROOT_HOST=${MORPHEUS_ROOT_HOST:-"."}
 
 # Build the docker arguments
 DOCKER_ARGS="-t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
@@ -75,4 +75,4 @@ echo ""
 echo "   COMMAND: docker build ${DOCKER_ARGS} -f ${SCRIPT_DIR}/Dockerfile ."
 echo "   Note: add '--progress plain' to DOCKER_EXTRA_ARGS to show all container build output"
 
-docker build ${DOCKER_ARGS} -f ${SCRIPT_DIR}/Dockerfile .
+podman build ${DOCKER_ARGS} --format=docker -f ${SCRIPT_DIR}/Dockerfile .

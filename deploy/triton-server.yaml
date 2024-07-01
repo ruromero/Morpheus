@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: triton
-          image: nvcr.io/nvidia/tritonserver:23.06-py3
+          image: nvcr.io/nvidia/tritonserver:24.05-py3
           command: 
             - "tritonserver"
             - "--model-repository=/repo/Morpheus/models/triton-model-repo"

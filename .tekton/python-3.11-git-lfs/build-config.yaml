@@ -1,0 +1,26 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: python-3.11-git-lfs
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'python-311-git-lfs:latest'
+  strategy:
+    type: Docker
+    dockerStrategy:
+      from:
+        kind: DockerImage
+        name: 'registry.redhat.io/rhel9/python-311:latest'
+  source:
+    type: Dockerfile
+    dockerfile: |-
+      FROM registry.redhat.io/rhel9/python-311:latest
+
+      USER root
+
+      RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash
+
+      RUN yum install -y git-lfs
+  runPolicy: Serial

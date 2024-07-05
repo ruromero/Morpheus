@@ -78,4 +78,4 @@ echo ""
 echo "   COMMAND: docker build ${DOCKER_ARGS} -f ${SCRIPT_DIR}/Dockerfile ."
 echo "   Note: add '--progress plain' to DOCKER_EXTRA_ARGS to show all container build output"
 
-docker build ${DOCKER_ARGS} -f ${SCRIPT_DIR}/Dockerfile .
+echo docker build ${DOCKER_ARGS} -f ${SCRIPT_DIR}/Dockerfile .

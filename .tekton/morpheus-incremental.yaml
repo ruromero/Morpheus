@@ -40,12 +40,12 @@ spec:
         spec: null
         steps:
           - computeResources: {}
-            image: 'image-registry.openshift-image-registry.svc:5000/ruben-nvidia/python-311-git-lfs@sha256:0031ce8dfcf4010426533782b2d499069194e8ec7842762132398e7f15cc4684'
+            image: 'quay.io/ruben/python-3.11-git-lfs:latest'
             name: build-pre-steps
             script: |
               cd $(workspaces.source.path)
               find . -mindepth 1 -delete
-              git clone -b tekton-build https://github.com/ruromero/Morpheus.git . 
+              git clone -b branch-24.10 https://github.com/ruromero/Morpheus.git .
               git config --global --add safe.directory /workspace/source 
               git remote add upstream https://github.com/nv-morpheus/Morpheus.git 
               git fetch upstream 

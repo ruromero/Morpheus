@@ -1,0 +1,91 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: morpheus-incremental-layers
+spec:
+  params:
+    - name: repo_url
+      type: string
+      description: Morpheus Repository URL to clone
+      default: https://github.com/nv-morpheus/Morpheus.git
+    - name: branch
+      type: string
+      description: Morpheus branch to build
+      default: branch-24.10
+    - name: registry-cache
+      type: string
+      description: Internal registry to use for caching layers
+    - name: output-image
+      type: string
+      description: Resulting image name
+      default: "quay.io/ecosystem-appeng/agent-morpheus-rh:v24.10-ci"
+  tasks:
+    - name: prepare-build
+      params:
+        - name: BRANCH
+          value: $(params.branch)
+        - name: REPO_URL
+          value: $(params.repo_url)
+      taskSpec:
+        params:
+          - name: BRANCH
+            type: string
+          - name: REPO_URL
+            type: string
+        steps:
+          - image: "quay.io/ruben/python-3.11-git-lfs:latest"
+            name: build-pre-steps
+            script: |
+              cd $(workspaces.source.path)
+              find . -mindepth 1 -delete
+              git config --global --add safe.directory /workspace/source
+              git clone -b $(params.BRANCH) $(params.REPO_URL) .
+              if [[ $(params.REPO_URL) != https://github.com/nv-morpheus/Morpheus* ]]; then
+                git remote add upstream https://github.com/nv-morpheus/Morpheus.git
+                git fetch upstream --tags
+              fi
+              git submodule update --init --recursive
+              sed -i 's/docker/echo docker/g' ./docker/build_container.sh
+              ./docker/build_container_release.sh
+      workspaces:
+        - name: source
+          workspace: morpheus-ws
+    - name: buildah
+      runAfter:
+        - prepare-build
+      taskRef:
+        kind: ClusterTask
+        name: buildah-persistent
+      timeout: 5h
+      params:
+        - name: IMAGE
+          value: "$(params.output-image)"
+        - name: BUILDER_IMAGE
+          value: "registry.redhat.io/rhel8/buildah@sha256:b48f410efa0ff8ab0db6ead420a5d8d866d64af846fece5efb185230d7ecf591"
+        - name: STORAGE_DRIVER
+          value: vfs
+        - name: DOCKERFILE
+          value: ./docker/Dockerfile
+        - name: CONTEXT
+          value: .
+        - name: TLSVERIFY
+          value: "true"
+        - name: FORMAT
+          value: docker
+        - name: BUILD_EXTRA_ARGS
+          value: "--layers --cache-from=$(params.registry-cache) --cache-to=$(params.registry-cache) --target runtime --build-arg CUDA_MAJOR_VER=12 --build-arg CUDA_MINOR_VER=1 --build-arg CUDA_REV_VER=1 --build-arg FROM_IMAGE=docker.io/nvidia/cuda --build-arg LINUX_DISTRO=ubuntu --build-arg LINUX_VER=22.04 --build-arg MORPHEUS_ROOT_HOST=. --build-arg MORPHEUS_SUPPORT_DOCA=OFF --build-arg MORPHEUS_BUILD_MORPHEUS_LLM=ON --build-arg PYTHON_VER=3.10 --build-arg VERSION_SUFFIX=runtime"
+        - name: PUSH_EXTRA_ARGS
+          value: ""
+        - name: SKIP_PUSH
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: morpheus-ws
+        - name: varlibcontainers
+          workspace: buildah-ws
+        - name: dockerconfig
+          workspace: dockerconfig-ws
+  workspaces:
+    - name: morpheus-ws
+    - name: buildah-ws
+    - name: dockerconfig-ws

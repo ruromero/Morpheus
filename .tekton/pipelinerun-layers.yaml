@@ -1,0 +1,38 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: morpheus-incremental-
+spec:
+  timeout: "5h0m0s"
+  pipelineRef:
+    name: morpheus-incremental-layers  # Reference the pipeline
+  workspaces:
+  - name: morpheus-ws
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  - name: buildah-ws
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Ti
+  - name: dockerconfig-ws
+    secret:
+      secretName: morpheus-build-buildah-secret
+
+  params:
+  - name: repo_url
+    value: https://github.com/ruromero/Morpheus.git
+  - name: branch
+    value: ci-24.10
+  - name: registry-cache
+    value: 'image-registry.openshift-image-registry.svc:5000/ruben-morpheus/agent-morpheus-cache'
+  - name: output-image
+    value: 'quay.io/ecosystem-appeng/morpheus:v24.10-ci'

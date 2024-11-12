@@ -110,7 +110,7 @@ ENV CUDA_PATH=/usr/local/cuda
 ENV MORPHEUS_ROOT=/workspace
 WORKDIR ${MORPHEUS_ROOT}
 
-COPY --from=condaforge/mambaforge:latest /opt/conda /opt/conda
+COPY --from=condaforge/mambaforge:24.9.0-0 /opt/conda /opt/conda
 
 ENV PATH="${PATH}:/opt/conda/bin"
 
@@ -316,7 +316,7 @@ RUN --mount=type=bind,from=conda_bld_morpheus,source=/opt/conda/conda-bld,target
     --mount=type=cache,id=conda_pkgs,target=/opt/conda/pkgs,sharing=locked \
     # CVE-2018-20225 for the base pip, not the env one
     # conda will ignore the request to remove pip
-    python -m pip uninstall -y pip && \
+    /opt/conda/bin/python${PYTHON_VER} -m pip uninstall -y pip && \
     source activate morpheus &&\
     # Install morpheus
     CONDA_ALWAYS_YES=true /opt/conda/bin/mamba install -n morpheus \
@@ -329,7 +329,7 @@ RUN --mount=type=bind,from=conda_bld_morpheus,source=/opt/conda/conda-bld,target
         -c nvidia/label/dev \
         -c pytorch \
         -c defaults \
-        morpheus && \
+        morpheus python=${PYTHON_VER} && \
     /opt/conda/bin/conda env update --solver=libmamba -n morpheus --file \
         conda/environments/runtime_cuda-${CUDA_MAJOR_VER}${CUDA_MINOR_VER}_arch-x86_64.yaml
 
@@ -346,8 +346,8 @@ RUN --mount=type=bind,source=.,target=/opt/host_repo \
     # Use a local clone to allow unpushed commits to be included
     git clone file:///opt/host_repo/${MORPHEUS_ROOT_HOST} /tmp/morpheus_repo &&\
     cd /tmp/morpheus_repo &&\
-    git lfs install &&\
-    ./scripts/fetch_data.py fetch examples
+    git lfs install
+#    ./scripts/fetch_data.py fetch datasets examples
 
 # ============ Stage: runtime ============
 # Setup container for runtime environment
